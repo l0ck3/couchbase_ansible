@@ -1,0 +1,41 @@
+- name: Couchbase Installation
+  hosts: all
+  vars:
+  - admin_user: Administrator
+  - admin_password: noDQiLOI
+  - cluster_ram_quota: 512
+  - bucket_name: alerti-test
+  - bucket_ram_quota: 512
+  - num_replicas: 0
+
+  tasks:
+
+  - name: download Couchbase package
+    get_url: url=http://packages.couchbase.com/releases/2.0.1/couchbase-server-community_x86_64_2.0.1.deb dest=/tmp/.
+
+  - name: Install dependencies
+    apt: pkg=libssl0.9.8 state=present
+
+  - name: Install Couchbase .deb file on all machines
+    shell: dpkg -i /tmp/couchbase-server-community_x86_64_2.0.1.deb
+
+- name: Initialize the cluster and add the nodes to the cluster
+  hosts: couchbase-main
+
+  tasks:
+  - name: Configure main node
+    shell: /opt/couchbase/bin/couchbase-cli cluster-init -c 127.0.0.1:8091  --cluster-init-username=Administrator --cluster-init-password=noDQiLOI --cluster-init-port=8091 --cluster-init-ramsize=512
+
+  - name: Create shell script for configuring main node
+    action: template src=../templates/couchbase-add-node.j2 dest=/tmp/addnodes.sh mode=750
+
+  - name: Launch config script
+    action: shell /tmp/addnodes.sh
+
+  - name: Rebalance the cluster
+    shell: /opt/couchbase/bin/couchbase-cli rebalance -c 127.0.0.1:8091 -u Administrator -p noDQiLOI
+
+  - name: create bucket alerti_test with 0 replicas
+    shell: /opt/couchbase/bin/couchbase-cli bucket-create -c 127.0.0.1:8091 --bucket=alerti-test --bucket-type=couchbase --bucket-port=11211 --bucket-ramsize=512  --bucket-replica=0 -u Administrator -p noDQiLOI
+
+

@@ -1,0 +1,15 @@
+upstream alerti-test {
+  server unix:///var/run/alerti-test.sock;
+}
+
+server {
+  listen 80;
+  server_name alerti-test.wengee.co;
+  root /var/www/alerti-test/current/public;
+
+  location / {
+    proxy_pass http://alerti-test; # match the name of upstream directive which is defined above
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+}

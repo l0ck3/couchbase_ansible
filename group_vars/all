@@ -1,0 +1,11 @@
+# Adminisrator user and password
+admin_user: Administrator
+admin_password: noDQiLOI
+
+# ram quota for the cluster
+cluster_ram_quota: 512
+
+# bucket and replicas
+bucket_name: alerti-test
+bucket_ram_quota: 512
+num_replicas: 0

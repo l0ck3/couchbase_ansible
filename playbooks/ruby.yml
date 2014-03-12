@@ -1,0 +1,34 @@
+- name: Setup Rails stack
+  hosts: app
+
+  tasks:
+
+  - name: install rb-installer
+    action: shell curl https://raw.github.com/fesplugas/rbenv-installer/master/bin/rbenv-installer | bash
+
+  - name: update PATH in ~/.bash_profile for rb-env
+    action: lineinfile dest=/home/vagrant/.bash_profile line=export\ PATH="$HOME/.rbenv/bin:$PATH" regexp=PATH.*rbenv
+
+  - name: add rb-env init to ~/.bash_profile
+    action: lineinfile dest=/home/vagrant/.bash_profile line='eval "$(rbenv init -)"' regexp=eval.*rbenv
+
+  - name: install ruby
+    action: shell /home/vagrant/.rbenv/bin/rbenv install $ruby_version creates=/home/vagrant/.rbenv/shims/ruby
+
+  - name: make ruby global
+    action: shell /home/vagrant/.rbenv/bin/rbenv global $ruby_version
+
+  - name: bootstrap any missing packages
+    action: shell /home/vagrant/.rbenv/bin/rbenv bootstrap-ubuntu-12-04
+
+  - name: bootstrap rbenv
+    action: shell /home/vagrant/.rbenv/bin/rbenv bootstrap
+
+  - name: install passenger
+    action: shell PATH=/home/vagrant/.rbenv/bin:$PATH /home/vagrant/.rbenv/shims/gem install passenger creates=/home/vagrant/.rbenv/shims/passenger
+
+  - name: initialize rbenv
+    action: shell bash /home/vagrant/.bash_profile
+
+  - name: install passenger apache2 module
+    action: shell PATH=/home/vagrant/.rbenv/bin:$PATH /home/vagrant/.rbenv/shims/passenger-install-apache2-module --auto creates=/home/vagrant/.rbenv/versions/$ruby_version/lib/ruby/gems/1.9.1/gems/passenger-$passenger_version/ext/apache2/mod_passenger.so
